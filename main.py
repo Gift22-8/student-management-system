@@ -95,6 +95,8 @@ while True:
     elif option == "3":
         search_name = input("Enter student name to search: ")
         result = search_student(students, search_name)
+
+        
         if result == "empty":
                pass
         elif result:
