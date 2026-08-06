@@ -1,8 +1,21 @@
-students = []
-def view_students(students):
-     for student in students:
-                     print(student)
-def add_student(students, name):
+import sqlite3
+connection = sqlite3.connect("students.db")
+cursor = connection.cursor()
+cursor.execute("""CREATE TABLE IF NOT EXISTS students (
+      id INTEGER PRIMARY KEY,
+      name TEXT
+)
+""")
+connection.commit()
+
+def view_students():
+    cursor.execute("SELECT * FROM students")
+    students = cursor.fetchall()
+
+    for student in students:
+           print(student)
+  
+def add_student(name):
      name = name.strip()
 
 
@@ -10,65 +23,68 @@ def add_student(students, name):
       print("name can not be empty.")
       return
 
+     cursor.execute(
+          "INSERT INTO students (name) VALUES (?)",
+          (name,)
+          )
+     connection.commit()
 
-     if name in students:
-            print("student already exists.")
-            return
-     
-     students.append(name)
      print("Student added successfully!")  
 
-def search_student(students, search_name):
+def search_student(search_name):
         search_name = search_name.strip()
 
 
         if not search_name:
                print("name can not be  empty.")
-               return "empty"
+               return 
 
 
-        if search_name in students:
-               return search_name
+        cursor.execute(
+            "SELECT * FROM students WHERE name = ?",
+                (search_name,)    )
 
-        return None
-    
-def update_student(students):
-       student_to_update = input("Enter the name of the student you want to update: ")
-       student_to_update = student_to_update.strip()
-       if  not student_to_update:
-               print("name can not be empty.")
+        student = cursor.fetchone()
+        if student is None:
+               print("student not found.")
                return
-       for index, student in enumerate(students):
-                      if student == student_to_update:
-                          new_name =input("Enter the new name for the student: ")
-                          new_name = new_name.strip()
+        print("student found!")
+    
+def update_student():
+       student_id =int(input("Enter the id of the student you want to update: "))
+    
+       new_name =input("Enter the new name for the student: ")
+       new_name = new_name.strip()
 
-                          if not new_name:
-                           print("Name can not be empty.")
-                           return
+       if not new_name:
+           print("Name can not be empty.")
+           return
                           
-                          if new_name in students and new_name != student_to_update:
-                           print("Student already exists.")
-                           return
-                      
-                          students[index] = new_name
-                          print("Student updated successfully!")
-                          break             
-def delete_student(students):
-             student_to_delete = input("Enter the name the student you want to delete: ")
-             student_to_delete = student_to_delete.strip()
+       cursor.execute(
+          "UPDATE students SET name = ? WHERE id = ?",
+        (new_name, student_id)
+                           ) 
+       if not cursor.rowcount:
+             print("student not found.")
+             return   
+       connection.commit()
+       print("student updated successfully!")         
+def delete_student():
+             student_id = int(input("Enter the id the student you want to delete: "))
 
 
-             if not student_to_delete:
-                    print("Name can not be empty.")
-                    return
+             cursor.execute(
+                   "DELETE FROM students WHERE id = ?",
+                    (student_id,)
+                    )
 
              
-             if student_to_delete in students:
-                   students.remove(student_to_delete)
-                   print("student deleted successfully!")
-             else:
-                     print("student not found.")                                           
+             if cursor.rowcount == 0:
+                   print("student not found.")
+                   return
+             
+             connection.commit()
+             print("student deleted successfully!")                                          
 while True:
     print("=" * 40)
     print("       STUDENT MANAGEMENT SYSTEM")
@@ -84,31 +100,25 @@ while True:
     option = input("Enter your choice (1-6): ")
     if option == "1":
        name = input("Enter student name: ")
-       add_student(students, name)
+       add_student(name)
 
     elif option == "6":
        print("Goodbye!")
+       connection.close()
        break
+    
     elif option == "2":
-       view_students(students)
+       view_students()
             
     elif option == "3":
         search_name = input("Enter student name to search: ")
-        result = search_student(students, search_name)
+        search_student(search_name)
 
-        
-        if result == "empty":
-               pass
-        elif result:
-               print("student found:", result)
-        else:
-               print("student not found")
-
-       
     elif option == "4":
-           update_student(students)
+           update_student()
+
     elif option == "5":
-           delete_student(students)
+           delete_student()
 
        
 
