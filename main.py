@@ -7,30 +7,7 @@ cursor.execute("""CREATE TABLE IF NOT EXISTS students (
 )
 """)
 connection.commit()
-
-    
-        
-def delete_student():
-        try:
-          student_id = int(input("Enter the id the student you want to delete: "))
-        except ValueError:
-             
-             print("Invalid input. Please enter a valid integer for the student id.")
-             return
-
-
-        cursor.execute(
-                   "DELETE FROM students WHERE id = ?",
-                    (student_id,)
-                    )
-
-             
-        if cursor.rowcount == 0:
-                   print("student not found.")
-                   return
-             
-        connection.commit()
-        print("student deleted successfully!")   
+ 
 class Student:
      def __init__(self, id, name):
            self.id =id
@@ -121,6 +98,27 @@ class StudentManager:
 
              print("student updated successfully!")
 
+        def delete_student(self):
+             try:
+              student_id = int(input("Enter the id of the student you want to delete: "))  
+             except ValueError:
+                 print("Invalid input. Please enter a valid integer for the studnet id.")
+                 return
+             
+             cursor = self.connection.cursor()
+             cursor.execute(
+             "DELETE FROM students WHERE id = ?",
+             (student_id,)
+              )
+
+
+             if cursor.rowcount == 0:
+                  print("student not found.")
+                  return
+        
+             self.connection.commit()
+
+             print("student deleted successfully!")
         
 manager = StudentManager(connection)
 
@@ -159,7 +157,7 @@ while True:
            manager.update_student()
 
     elif option == "5":
-           delete_student()
+           manager.delete_student()
     else:
          print("Invalid option. Please enter a valid option (1-6).")
 
