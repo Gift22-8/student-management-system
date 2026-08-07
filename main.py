@@ -8,12 +8,6 @@ cursor.execute("""CREATE TABLE IF NOT EXISTS students (
 """)
 connection.commit()
 
-def view_students():
-    cursor.execute("SELECT * FROM students")
-    students = cursor.fetchall()
-
-    for student in students:
-           print(student)
   
 def add_student(name):
      name = name.strip()
@@ -94,7 +88,29 @@ def delete_student():
                    return
              
         connection.commit()
-        print("student deleted successfully!")                                          
+        print("student deleted successfully!")   
+class Student:
+     def __init__(self, id, name):
+           self.id =id
+           self.name = name
+class StudentManager:
+        def __init__(self, connection):
+           self.connection = connection
+
+        def view_students(self):
+           cursor = self.connection.cursor()
+           cursor.execute("SELECT * FROM students")
+           students = cursor.fetchall()
+
+           for student in students:
+                student_obj = Student(student[0], student[1])
+                print(student_obj.id, student_obj.name)
+
+
+manager = StudentManager(connection)
+
+     
+
 while True:
     print("=" * 40)
     print("       STUDENT MANAGEMENT SYSTEM")
@@ -118,7 +134,7 @@ while True:
        break
     
     elif option == "2":
-       view_students()
+      manager.view_students()
             
     elif option == "3":
         search_name = input("Enter student name to search: ")
@@ -132,5 +148,5 @@ while True:
     else:
          print("Invalid option. Please enter a valid option (1-6).")
 
-       
+      
 
