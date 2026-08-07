@@ -51,8 +51,13 @@ def search_student(search_name):
         print("student found!")
     
 def update_student():
-       student_id =int(input("Enter the id of the student you want to update: "))
-    
+       try:
+         student_id =int(input("Enter the id of the student you want to update: "))
+
+       except ValueError:
+             print("Invalid input. Please enter a valid integer for the student id.")
+             return
+       
        new_name =input("Enter the new name for the student: ")
        new_name = new_name.strip()
 
@@ -70,21 +75,26 @@ def update_student():
        connection.commit()
        print("student updated successfully!")         
 def delete_student():
-             student_id = int(input("Enter the id the student you want to delete: "))
+        try:
+          student_id = int(input("Enter the id the student you want to delete: "))
+        except ValueError:
+             
+             print("Invalid input. Please enter a valid integer for the student id.")
+             return
 
 
-             cursor.execute(
+        cursor.execute(
                    "DELETE FROM students WHERE id = ?",
                     (student_id,)
                     )
 
              
-             if cursor.rowcount == 0:
+        if cursor.rowcount == 0:
                    print("student not found.")
                    return
              
-             connection.commit()
-             print("student deleted successfully!")                                          
+        connection.commit()
+        print("student deleted successfully!")                                          
 while True:
     print("=" * 40)
     print("       STUDENT MANAGEMENT SYSTEM")
@@ -119,6 +129,8 @@ while True:
 
     elif option == "5":
            delete_student()
+    else:
+         print("Invalid option. Please enter a valid option (1-6).")
 
        
 
