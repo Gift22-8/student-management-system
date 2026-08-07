@@ -8,24 +8,6 @@ cursor.execute("""CREATE TABLE IF NOT EXISTS students (
 """)
 connection.commit()
 
-
-def add_student(name):
-     name = name.strip()
-
-
-     if not name:
-      print("name can not be empty.")
-      return
-
-     cursor.execute(
-          "INSERT INTO students (name) VALUES (?)",
-          (name,)
-          )
-     connection.commit()
-
-     print("Student added successfully!")  
-
-
     
 def update_student():
        try:
@@ -111,6 +93,26 @@ class StudentManager:
 
            student_obj = Student(student[0], student[1])
            print(student_obj.id, student_obj.name)
+
+
+        def add_student(self, name):
+             name = name.strip()
+             if not name:
+                  print("name can not be empty.")
+                  return
+             cursor = self.connection.cursor()
+
+
+             cursor.execute(
+                  "INSERT INTO students (name) VALUES (?)",
+                  (name,)
+                  )
+
+             
+             self.connection.commit()
+
+
+             print("Student added successfully!")
         
 manager = StudentManager(connection)
 
@@ -131,7 +133,7 @@ while True:
     option = input("Enter your choice (1-6): ")
     if option == "1":
        name = input("Enter student name: ")
-       add_student(name)
+       manager.add_student(name)
 
     elif option == "6":
        print("Goodbye!")
