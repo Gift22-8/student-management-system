@@ -9,30 +9,7 @@ cursor.execute("""CREATE TABLE IF NOT EXISTS students (
 connection.commit()
 
     
-def update_student():
-       try:
-         student_id =int(input("Enter the id of the student you want to update: "))
-
-       except ValueError:
-             print("Invalid input. Please enter a valid integer for the student id.")
-             return
-       
-       new_name =input("Enter the new name for the student: ")
-       new_name = new_name.strip()
-
-       if not new_name:
-           print("Name can not be empty.")
-           return
-                          
-       cursor.execute(
-          "UPDATE students SET name = ? WHERE id = ?",
-        (new_name, student_id)
-                           ) 
-       if not cursor.rowcount:
-             print("student not found.")
-             return   
-       connection.commit()
-       print("student updated successfully!")         
+        
 def delete_student():
         try:
           student_id = int(input("Enter the id the student you want to delete: "))
@@ -113,6 +90,37 @@ class StudentManager:
 
 
              print("Student added successfully!")
+
+
+        def update_student(self):
+             try:
+              student_id = int(input("Enter the id of the student you want to update: "))
+             except ValueError:
+                  print("Invalid input. Please enter a valid integer for the student id.")
+                  return
+
+             
+             new_name = input("Enter the new name for the student: ")
+             new_name = new_name.strip()
+
+             if not new_name:
+                  print("name can not be empty.")
+                  return
+
+             cursor = self.connection.cursor()
+             cursor.execute(
+                  "UPDATE students SET name = ? WHERE id = ?",
+                  (new_name, student_id)
+                  )
+
+             if cursor.rowcount == 0:
+                  print("student not found")
+                  return
+
+             self.connection.commit()
+
+             print("student updated successfully!")
+
         
 manager = StudentManager(connection)
 
@@ -148,7 +156,7 @@ while True:
         manager.search_student(search_name)
 
     elif option == "4":
-           update_student()
+           manager.update_student()
 
     elif option == "5":
            delete_student()
