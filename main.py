@@ -8,7 +8,7 @@ cursor.execute("""CREATE TABLE IF NOT EXISTS students (
 """)
 connection.commit()
 
-  
+
 def add_student(name):
      name = name.strip()
 
@@ -25,24 +25,7 @@ def add_student(name):
 
      print("Student added successfully!")  
 
-def search_student(search_name):
-        search_name = search_name.strip()
 
-
-        if not search_name:
-               print("name can not be  empty.")
-               return 
-
-
-        cursor.execute(
-            "SELECT * FROM students WHERE name = ?",
-                (search_name,)    )
-
-        student = cursor.fetchone()
-        if student is None:
-               print("student not found.")
-               return
-        print("student found!")
     
 def update_student():
        try:
@@ -105,8 +88,30 @@ class StudentManager:
            for student in students:
                 student_obj = Student(student[0], student[1])
                 print(student_obj.id, student_obj.name)
+        def search_student(self, search_name):
+           search_name = search_name.strip()
+
+           if not search_name:
+                print("name can not be empty.")
+                return
+
+           
+           cursor = self.connection.cursor()
+           cursor.execute(
+                "SELECT * FROM students WHERE name = ?",
+                (search_name,)
+           )
+           student = cursor.fetchone()
 
 
+           if student is None:
+                  print("student not found.")
+                  return
+
+
+           student_obj = Student(student[0], student[1])
+           print(student_obj.id, student_obj.name)
+        
 manager = StudentManager(connection)
 
      
@@ -138,7 +143,7 @@ while True:
             
     elif option == "3":
         search_name = input("Enter student name to search: ")
-        search_student(search_name)
+        manager.search_student(search_name)
 
     elif option == "4":
            update_student()
