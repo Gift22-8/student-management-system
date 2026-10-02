@@ -1,6 +1,10 @@
+from main import StudentManager, connection
+
 import tkinter as tk
 
 root = tk.Tk()
+
+manager = StudentManager(connection)
 
 root.title("Student Management System")
 
@@ -74,7 +78,7 @@ student_card.pack(pady=20)
 
 student_count = tk.Label(
     student_card,
-    text="0",
+    text=str(manager.get_student_count()),
     font=("Arial", 24),
     bg="#1e293b",
     fg="white"
