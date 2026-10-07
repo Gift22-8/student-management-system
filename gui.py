@@ -1,6 +1,7 @@
 from main import StudentManager, connection
 
 import tkinter as tk
+from tkinter import ttk
 
 root = tk.Tk()
 
@@ -31,9 +32,36 @@ dashboard_button = tk.Button(
 
 dashboard_button.pack(fill="x", padx=10, pady=10)
 
+def show_students():
+   dashboard_title.config(text="students")
+   student_count.pack_forget()
+   student_text.pack_forget()
+
+
+   student_table = ttk.Treeview(
+    content,
+    columns=("id", "name", "email", "phone", "age", "department"),
+    show="headings"
+)
+
+   student_table.heading("id", text="ID")
+   student_table.heading("name", text="Name")
+   student_table.heading("email", text="Email")
+   student_table.heading("phone", text="Phone")
+   student_table.heading("age", text="Age")
+   student_table.heading("department", text="Department")
+
+   students = manager.get_all_students()
+
+   for student in students:
+    print(student.name)
+
+   student_table.pack()
+
 students_button = tk.Button(
     sidebar,
-    text="Students"
+    text="Students",
+    command = show_students
 )
 
 students_button.pack(fill="x", padx=10, pady=10)
