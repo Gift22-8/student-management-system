@@ -50,6 +50,23 @@ class StudentManager:
         cursor.execute("SELECT COUNT(*) FROM students")
         count = cursor.fetchone()[0]
         return count
+    
+    def get_all_students(self):
+        cursor = self.connection.cursor()
+        cursor.execute("SELECT * FROM students")
+        students = cursor.fetchall()
+
+        return [
+            Student(
+                student[0], 
+                student[1],
+                student[2],
+                student[3],
+                student[4],
+                student[5]
+            )
+         for student in students
+        ]
 
     def view_students(self):
         cursor = self.connection.cursor()
