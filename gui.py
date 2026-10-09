@@ -1,7 +1,7 @@
 from main import StudentManager, connection
 
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 
 root = tk.Tk()
 
@@ -51,12 +51,72 @@ def show_students():
    student_table.heading("age", text="Age")
    student_table.heading("department", text="Department")
 
+   student_table.column("id", width=50)
+   student_table.column("name", width=150)
+   student_table.column("email", width=180)
+   student_table.column("phone", width=120)
+   student_table.column("age", width=60)
+   student_table.column("department", width=180)
+
+   def on_student_select(event):
+       selected_item = student_table.selection()
+
+   student_table.bind("<<TreeviewSelect>>", on_student_select)  
+
    students = manager.get_all_students()
 
    for student in students:
-    print(student.name)
+    student_table.insert(
+        "",
+        "end",
+        values=(
+            student.id,
+            student.name,
+            student.email,
+            student.phone,
+            student.age,
+            student.department
+        )
+    )
 
-   student_table.pack()
+   scrollbar = ttk.Scrollbar(
+    content,
+    orient="vertical",
+    command=student_table.yview
+    )
+
+   student_table.configure(yscrollcommand=scrollbar.set)
+
+   def delete_student():
+
+    selected_item = student_table.selection()
+
+    if selected_item:
+        student_values = student_table.item(selected_item[0])["values"]
+        student_id = student_values[0]
+
+        confirm = messagebox.askyesno(
+            "Confirm Delete",
+            "Are you sure you want to delete this student?"
+            )  
+        if confirm:
+           manager.delete_student(student_id)
+           student_table.delete(selected_item[0])
+    else:
+        print("No student selected")
+
+   delete_button = tk.Button(
+       content,
+       text="Delete Student",
+       command=delete_student
+   )
+
+   delete_button.pack()
+
+   student_table.pack(side="left", fill="both", expand=True)
+   scrollbar.pack(side="right", fill="y")
+
+ 
 
 students_button = tk.Button(
     sidebar,

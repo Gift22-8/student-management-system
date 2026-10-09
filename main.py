@@ -68,6 +68,16 @@ class StudentManager:
          for student in students
         ]
 
+    def delete_student(self, student_id):
+       cursor = self.connection.cursor()
+
+       cursor.execute(
+        "DELETE FROM students WHERE id = ?",
+        (student_id,)
+      )
+
+       self.connection.commit()
+
     def view_students(self):
         cursor = self.connection.cursor()
         cursor.execute("SELECT * FROM students")
@@ -208,27 +218,7 @@ class StudentManager:
 
         print("Student updated successfully!")
 
-    def delete_student(self):
-        try:
-            student_id = int(input("Enter the id of the student you want to delete: "))
-        except ValueError:
-            print("Invalid input. Please enter a valid integer for the student id.")
-            return
 
-        cursor = self.connection.cursor()
-
-        cursor.execute(
-            "DELETE FROM students WHERE id = ?",
-           (student_id,)
-        )
-
-        if cursor.rowcount == 0:
-            print("Student not found.")
-            return
-
-        self.connection.commit()
-
-        print("Student deleted successfully!")
 
 # Runs the main menu and handles user interaction.
 def main():
