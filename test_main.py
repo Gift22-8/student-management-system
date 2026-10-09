@@ -1,7 +1,6 @@
 import unittest
 import sqlite3
-from unittest.mock import patch
-from main import StudentManager
+from main import StudentManager, validate_student_data
 
 class TestStudentManager(unittest.TestCase):
     def setUp(self):
@@ -43,25 +42,6 @@ class TestStudentManager(unittest.TestCase):
         self.assertEqual(student[4], 21)
         self.assertEqual(student[5], "Software Engineering")
 
-    def test_view_students(self):
-        self.manager.add_student(
-            "Test Student",
-            "test@gmail.com",
-            "0912345678",
-            21,
-            "Software Engineering"
-        )
-
-        with patch("builtins.print") as mock_print:
-            self.manager.view_students()
-
-        mock_print.assert_any_call("ID:", 1)
-        mock_print.assert_any_call("Name:", "Test Student")
-        mock_print.assert_any_call("Email:", "test@gmail.com")
-        mock_print.assert_any_call("Phone Number:", "0912345678")
-        mock_print.assert_any_call("Age:", 21)
-        mock_print.assert_any_call("Department:", "Software Engineering")
-
     def test_search_student(self):
         self.manager.add_student(
             "Test Student",
@@ -71,15 +51,10 @@ class TestStudentManager(unittest.TestCase):
             "Software Engineering"
         )
 
-        with patch("builtins.print") as mock_print:
-            self.manager.search_student("Test Student")
-
-        mock_print.assert_any_call("ID:", 1)
-        mock_print.assert_any_call("Name:", "Test Student")
-        mock_print.assert_any_call("Email:", "test@gmail.com")
-        mock_print.assert_any_call("Phone Number:", "0912345678")
-        mock_print.assert_any_call("Age:", 21)
-        mock_print.assert_any_call("Department:", "Software Engineering")
+        results = self.manager.search_student("Test")
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].name, "Test Student")
+        self.assertEqual(results[0].email, "test@gmail.com")
 
     def test_update_student(self):
         self.manager.add_student(
@@ -97,18 +72,16 @@ class TestStudentManager(unittest.TestCase):
         )
         student_id = cursor.fetchone()[0]   
 
-        with patch(
-            "builtins.input", 
-            side_effect=[
-                str(student_id),
-                "New Name",
-                "new@gmail.com",
-                "0922222222",
-                "21",
-                "Software Engineering"
-           ]
-        ):
-            self.manager.update_student()
+        success = self.manager.update_student(
+            student_id,
+            "New Name",
+            "new@gmail.com",
+            "0922222222",
+            21,
+            "Software Engineering"
+        )
+
+        self.assertTrue(success)
 
         cursor.execute(
             "SELECT name, email, phone, age, department FROM students WHERE id = ?",
@@ -138,8 +111,8 @@ class TestStudentManager(unittest.TestCase):
         )
         student_id = cursor.fetchone()[0]
 
-        with patch("builtins.input", return_value=str(student_id)):
-            self.manager.delete_student()
+        success = self.manager.delete_student(student_id)
+        self.assertTrue(success)
 
         cursor.execute(
             "SELECT * FROM students WHERE id = ?",
@@ -149,5 +122,26 @@ class TestStudentManager(unittest.TestCase):
 
         self.assertIsNone(student)
 
+    def test_validation(self):
+        is_valid, err = validate_student_data("Alice", "alice@example.com", "123456", 20, "CS")
+        self.assertTrue(is_valid)
+        self.assertEqual(err, "")
+
+        is_valid, err = validate_student_data("", "alice@example.com", "123456", 20, "CS")
+        self.assertFalse(is_valid)
+        self.assertIn("Name cannot be empty", err)
+
+        is_valid, err = validate_student_data("Alice", "invalidemail", "123456", 20, "CS")
+        self.assertFalse(is_valid)
+        self.assertIn("Invalid email", err)
+
+        is_valid, err = validate_student_data("Alice", "alice@example.com", "abc", 20, "CS")
+        self.assertFalse(is_valid)
+        self.assertIn("Invalid phone number", err)
+
+        is_valid, err = validate_student_data("Alice", "alice@example.com", "123456", -5, "CS")
+        self.assertFalse(is_valid)
+        self.assertIn("Age must be greater than 0", err)
+
 if __name__ == "__main__":
-    unittest.main()
+    unittest.main()

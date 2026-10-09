@@ -40,6 +40,34 @@ class Student:
         self.age = age
         self.department = department
 
+def validate_student_data(name, email, phone, age, department):
+    """Validates student record inputs. Returns (is_valid: bool, message: str)."""
+    name = (name or "").strip()
+    if not name:
+        return False, "Name cannot be empty."
+
+    email = (email or "").strip()
+    if not email or "@" not in email:
+        return False, "Invalid email. Must contain '@'."
+
+    phone = (phone or "").strip()
+    if not phone or not phone.isdigit():
+        return False, "Invalid phone number. Numbers only."
+
+    try:
+        age_int = int(str(age).strip())
+        if age_int <= 0:
+            return False, "Age must be greater than 0."
+    except ValueError:
+        return False, "Invalid age. Please enter a valid number."
+
+    department = (department or "").strip()
+    if not department:
+        return False, "Department cannot be empty."
+
+    return True, ""
+
+
 # Handles database operations for students.
 class StudentManager:
     def __init__(self, connection):
@@ -65,18 +93,25 @@ class StudentManager:
                 student[4],
                 student[5]
             )
-         for student in students
+            for student in students
         ]
 
+    def get_student_by_id(self, student_id):
+        cursor = self.connection.cursor()
+        cursor.execute("SELECT * FROM students WHERE id = ?", (student_id,))
+        row = cursor.fetchone()
+        if row:
+            return Student(row[0], row[1], row[2], row[3], row[4], row[5])
+        return None
+
     def delete_student(self, student_id):
-       cursor = self.connection.cursor()
-
-       cursor.execute(
-        "DELETE FROM students WHERE id = ?",
-        (student_id,)
-      )
-
-       self.connection.commit()
+        cursor = self.connection.cursor()
+        cursor.execute(
+            "DELETE FROM students WHERE id = ?",
+            (student_id,)
+        )
+        self.connection.commit()
+        return cursor.rowcount > 0
 
     def view_students(self):
         cursor = self.connection.cursor()
@@ -101,122 +136,78 @@ class StudentManager:
             print("Department:", student_obj.department)
             print("-" * 30)
 
-    def search_student(self, search_name):
-        search_name = search_name.strip().title()
-
-        if not search_name:
-            print("Name cannot be empty.")
-            return
+    def search_student(self, search_term):
+        search_term = (search_term or "").strip()
+        if not search_term:
+            return self.get_all_students()
 
         cursor = self.connection.cursor()
+        like_query = f"%{search_term}%"
         cursor.execute(
-            "SELECT * FROM students WHERE name = ?",
-            (search_name,)
+            """SELECT * FROM students 
+               WHERE name LIKE ? OR email LIKE ? OR department LIKE ? OR CAST(id AS TEXT) = ?""",
+            (like_query, like_query, like_query, search_term)
         )
-        student = cursor.fetchone()
+        students = cursor.fetchall()
 
-        if student is None:
-            print("Student not found.")
-            return
-
-        student_obj = Student(
-            student[0], 
-            student[1],
-            student[2],
-            student[3],
-            student[4],
-            student[5]
-        )
-        
-        print("ID:", student_obj.id)
-        print("Name:", student_obj.name)
-        print("Email:", student_obj.email)
-        print("Phone Number:", student_obj.phone)
-        print("Age:", student_obj.age)
-        print("Department:", student_obj.department)
+        return [
+            Student(
+                student[0], 
+                student[1],
+                student[2],
+                student[3],
+                student[4],
+                student[5]
+            )
+            for student in students
+        ]
 
     def add_student(self, name, email, phone, age, department):
-        name = name.strip()
+        is_valid, err = validate_student_data(name, email, phone, age, department)
+        if not is_valid:
+            raise ValueError(err)
 
-        if not name:
-            print("Name cannot be empty.")
-            return
+        name = name.strip().title()
+        email = email.strip()
+        phone = phone.strip()
+        age = int(age)
+        department = department.strip().title()
 
         cursor = self.connection.cursor()
-
         cursor.execute(
-            "INSERT INTO students (name,email, phone, age, department) VALUES (?, ?, ?, ?, ?)",
+            "INSERT INTO students (name, email, phone, age, department) VALUES (?, ?, ?, ?, ?)",
             (name, email, phone, age, department)
         )
-
         self.connection.commit()
-
         print("Student added successfully!")
+        return cursor.lastrowid
 
-    def update_student(self):
-        try:
-            student_id = int(input("Enter the id of the student you want to update: "))
-        except ValueError:
-            print("Invalid input. Please enter a valid integer for the student id.")
-            return
+    def update_student(self, student_id, name, email, phone, age, department):
+        is_valid, err = validate_student_data(name, email, phone, age, department)
+        if not is_valid:
+            raise ValueError(err)
 
-        new_name = input("Enter the new name for the student: ")
-        new_name = new_name.strip().title()
-
-        if not new_name:
-            print("Name cannot be empty.")
-            return
-        new_email = input("Enter the new email for the student: ")
-        new_phone = input("Enter the new phone number for the student: ")
-        new_age = input("Enter the new age for the student: ")
-        new_department = input("Enter the new department for the student: ")
-
-        new_email = new_email.strip()
-
-        if "@" not in new_email:
-            print("Invalid email. Please enter a valid email address.")
-            return
-
-        new_phone = new_phone.strip()
-    
-        if not new_phone.isdigit():
-            print("Invalid phone number. Please enter numbers only.")
-            return
-
-        new_age = new_age.strip()
-
-        try:
-          new_age = int(new_age)
-        except ValueError:
-           print("Invalid age. Please enter a number.")
-           return
-
-        if new_age <= 0:
-           print("Age must be greater than 0.")
-           return
-
-        new_department = new_department.strip().title()
-
-        if not new_department:
-           print("Department cannot be empty.")
-           return
-
+        name = name.strip().title()
+        email = email.strip()
+        phone = phone.strip()
+        age = int(age)
+        department = department.strip().title()
 
         cursor = self.connection.cursor()
         cursor.execute(
             """UPDATE students 
-            SET name = ?, email = ?, phone = ?, age = ?, department = ?
-              WHERE id = ?""", 
-            (new_name, new_email, new_phone, new_age, new_department, student_id)
+               SET name = ?, email = ?, phone = ?, age = ?, department = ?
+               WHERE id = ?""", 
+            (name, email, phone, age, department, student_id)
         )
-
         if cursor.rowcount == 0:
             print("Student not found")
-            return
+            return False
 
         self.connection.commit()
-
         print("Student updated successfully!")
+        return True
+
 
 
 
